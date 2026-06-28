@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>나에게 주시는 새해 말씀</title>
+    <link rel="stylesheet" href="bible-verse-card.css" />
+  </head>
+  <body>
+    <main class="app">
+      <section class="intro" aria-labelledby="page-title">
+        <p class="eyebrow">말씀카드</p>
+        <h1 id="page-title">나에게 주시는 새해 말씀</h1>
+        <p class="description">기도하는 마음으로 새해의 말씀을 받아보세요.</p>
+      </section>
+
+      <section class="preview" aria-label="말씀카드 미리보기">
+        <canvas id="cardCanvas" width="1080" height="1350">
+          이 브라우저는 Canvas를 지원하지 않습니다.
+        </canvas>
+      </section>
+
+      <section class="actions" aria-label="말씀카드 동작">
+        <button id="drawButton" type="button">새해 말씀카드 뽑기</button>
+        <button id="downloadButton" type="button" class="secondary">이미지 저장</button>
+      </section>
+
+      <p id="message" class="message" role="status" aria-live="polite"></p>
+      <footer class="footer">
+        <p class="note">말씀은 임의로 제공되는 묵상용 카드입니다.</p>
+        <p class="copyright">© 2026 나에게 주시는 새해 말씀. All rights reserved.</p>
+      </footer>
+    </main>
+
+    <script src="bible-verses.js"></script>
+    <script src="bible-verse-card.js"></script>
+  </body>
+</html>
