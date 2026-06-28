@@ -312,7 +312,9 @@ function downloadCanvas(reference) {
   const fileName = `말씀카드_${makeSafeReference(reference)}.png`;
   const dataUrl = canvas.toDataURL("image/png");
   const link = document.createElement("a");
-  const fallbackWindow = isIOS() ? window.open() : null;
+  const needsSaveGuide = isIOS();
+  const usesAndroidDownload = isAndroid();
+  const fallbackWindow = needsSaveGuide ? window.open("", "_blank") : null;
 
   link.href = dataUrl;
   link.download = fileName;
@@ -320,13 +322,113 @@ function downloadCanvas(reference) {
   link.click();
   link.remove();
 
-  setMessage("이미지 저장을 시작했어요.");
-
-  // 일부 iPhone Safari 환경에서 download가 제한되면 열린 이미지 탭에서 길게 눌러 저장할 수 있습니다.
-  if (fallbackWindow) {
-    fallbackWindow.document.write(`<img src="${dataUrl}" alt="말씀카드" style="width:100%;height:auto;">`);
-    fallbackWindow.document.title = fileName;
+  if (needsSaveGuide) {
+    setMessage("새 탭에서 이미지를 길게 눌러 저장해주세요.");
+  } else if (usesAndroidDownload) {
+    setMessage("다운로드가 시작됐어요. 알림창이나 Downloads 폴더를 확인해주세요.");
+  } else {
+    setMessage("이미지 저장을 시작했어요.");
   }
+
+  // 일부 iPhone Safari 환경에서는 download가 제한되어 저장 안내 페이지를 함께 엽니다.
+  if (fallbackWindow) {
+    writeMobileSaveGuide(fallbackWindow, dataUrl, fileName);
+  }
+}
+
+function writeMobileSaveGuide(targetWindow, dataUrl, fileName) {
+  targetWindow.document.open();
+  targetWindow.document.write(`<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>${escapeHtml(fileName)}</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        color: #2f2a25;
+        background: #fbf7f1;
+        font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      }
+      main {
+        width: min(100%, 520px);
+        margin: 0 auto;
+        padding: 22px 16px 34px;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 1.35rem;
+        line-height: 1.3;
+      }
+      p {
+        margin: 0;
+        color: #6f655d;
+        font-size: 0.96rem;
+        line-height: 1.55;
+      }
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin: 18px 0;
+      }
+      button, a {
+        min-height: 48px;
+        border-radius: 8px;
+        border: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 14px;
+        color: #fff;
+        background: #725f72;
+        font: inherit;
+        font-weight: 700;
+        text-decoration: none;
+      }
+      a {
+        color: #2f2a25;
+        background: #fff;
+        border: 1px solid #ded1c4;
+      }
+      img {
+        display: block;
+        width: 100%;
+        height: auto;
+        border-radius: 8px;
+        box-shadow: 0 18px 45px rgba(75, 58, 46, 0.18);
+        -webkit-touch-callout: default;
+      }
+      .hint {
+        margin-top: 14px;
+        font-size: 0.86rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>이미지 저장하기</h1>
+      <p>아래 말씀카드를 길게 누른 뒤 사진 앱에 저장하거나 이미지 저장을 선택해주세요.</p>
+      <div class="actions">
+        <button type="button" onclick="window.close(); history.back();">돌아가기</button>
+        <a href="${dataUrl}" download="${escapeHtml(fileName)}">다시 다운로드</a>
+      </div>
+      <img src="${dataUrl}" alt="저장할 말씀카드">
+      <p class="hint">iPhone Safari에서는 자동 저장이 제한될 수 있어 이 안내 화면이 열립니다.</p>
+    </main>
+  </body>
+</html>`);
+  targetWindow.document.close();
+}
+
+function escapeHtml(text) {
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 function makeSafeReference(reference) {
@@ -367,4 +469,8 @@ function setMessage(text) {
 
 function isIOS() {
   return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+
+function isAndroid() {
+  return /Android/i.test(navigator.userAgent);
 }
